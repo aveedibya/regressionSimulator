@@ -49,6 +49,7 @@ footnote_markdown = '''
 ```
 Created by: Aveedibya Dey
 ```
+| [Source Code](https://github.com/aveedibya/regressionSimulator)
     '''
 
 app.layout = html.Div(children=[

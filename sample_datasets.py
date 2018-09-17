@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 Created on Mon Sep 17 11:56:54 2018
-
-@author: agarw
+@author: Aveedibya Dey
+---
+Create sample datasets for Regression Simulator App
 """
 import pandas as pd
 import numpy as np
