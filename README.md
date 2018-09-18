@@ -1,6 +1,6 @@
 # Regression Simulator
 
-__Description:___ Provides an easy way to simulate different regression models on your data. Data file can be uploaded in CSV or XLS format. ALternatively, use the built-in sample datasets to try out different regression models.
+__Description:__ Provides an easy way to simulate different regression models on your data. Data file can be uploaded in CSV or XLS format. ALternatively, use the built-in sample datasets to try out different regression models.
 
 Models supported include:
  * Simple Linear Regression
