@@ -46,10 +46,7 @@ Currently supports:
 '''
 
 footnote_markdown = '''
-```
-Created by: Aveedibya Dey
-```
-| [Source Code](https://github.com/aveedibya/regressionSimulator)
+Created by: Aveedibya Dey | [Source Code](https://github.com/aveedibya/regressionSimulator)
     '''
 
 app.layout = html.Div(children=[
@@ -152,7 +149,7 @@ app.layout = html.Div(children=[
         #---------
         #Footnote
         html.Div([dcc.Markdown(footnote_markdown)], 
-                  style={'borderTop': 'thin lightgrey solid', 'padding': '10'}),
+                  style={'borderTop': 'thin lightgrey solid', 'padding': '10', 'fontSize': 'small'}),
         ], className='container'
 )
 
