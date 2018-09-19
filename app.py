@@ -128,8 +128,8 @@ app.layout = html.Div(children=[
                                {'label': 'Small Outliers in y', 'value': 'df_y_errors'},
                                {'label': 'Large Outliers in x', 'value': 'df_x_large_errors'},
                                {'label': 'Large Outliers in y', 'value': 'df_y_large_errors'},
-                               {'label': 'Sine Function with Noises', 'value': 'df_rbf_eps'},
-                               {'label': 'Sine Function with Outliers', 'value': 'df_rbf_c'}
+                               {'label': 'Sine Function with Noises and Outliers', 'value': 'df_rbf_eps'},
+                               {'label': 'Sine Function', 'value': 'df_rbf_c'}
                            ],
                            placeholder='Built-in Dataset Not Selected',
                            value=''
