@@ -21,7 +21,7 @@ def sample_data():
     y_sample_rbf_eps = y_sample_rbf.copy()
     y_sample_rbf_c = y_sample_rbf.copy()
     y_sample_rbf_eps[5:25] += 0.25* (-np.random.rand(20))
-    y_sample_rbf_c[50:60] += 1 * (-np.random.rand(10))
+    y_sample_rbf_eps[50:60] += 1 * (-np.random.rand(10))
     
     # Generate sample data
     X = np.random.normal(size=100)

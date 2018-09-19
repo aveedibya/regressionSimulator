@@ -46,7 +46,7 @@ Currently supports:
 '''
 
 footnote_markdown = '''
-Created by: Aveedibya Dey | [Source Code](https://github.com/aveedibya/regressionSimulator)
+Created by: Aveedibya Dey | [Source Code](https://github.com/aveedibya/regressionSimulator) | [Contact Me/Provide Feedback](https://aveedibyadey.typeform.com/to/VKEs3v)
     '''
 
 app.layout = html.Div(children=[
