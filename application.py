@@ -31,7 +31,7 @@ from sample_datasets import sample_data
 app = dash.Dash()
 app.title = 'Regression Simulator'
 
-application = app.server
+server = app.server
 
 subheading_markdown = '''
 __Quick Description__: 
@@ -359,4 +359,4 @@ app.css.append_css({"external_url": "https://codepen.io/chriddyp/pen/bWLwgP.css"
 
 
 if __name__ == '__main__':
-    application.run_server(debug=True, port=8080)
+    app.run_server(debug=True)
