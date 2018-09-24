@@ -75,8 +75,9 @@ app.layout = html.Div(children=[
                                options=[
                             {'label': 'Simple Linear Regression', 'value': 1},
                             {'label': 'Support Vector Regression', 'value': 2},
-                            {'label': 'Robust Linear Regression', 'value': 3},
-                            {'label': 'Theilsen Linear Regression', 'value': 4}],
+                            {'label': 'RANSAC Linear Regression', 'value': 3},
+                            {'label': 'Theilsen Linear Regression', 'value': 4},
+                            {'label': 'Huber Regression', 'value': 5}],
                             placeholder="Select Regression Model", multi=True)]),
                   #------------
                   #SVR Options
@@ -119,7 +120,7 @@ app.layout = html.Div(children=[
                     'borderStyle': 'solid','borderRadius': '5px', 'textAlign': 'center', 'margin-top': '5px', 
                     'backgroundColor': '#ebebe0', 'display': 'inline-block'},
             ), 
-            html.Div([dcc.Slider(id='row-trimmer', min=0.01, max=1, value=0.1, step=0.01, marks={}, updatemode='mouseup')], 
+            html.Div([dcc.Slider(id='row-trimmer', min=0.01, max=1, value=1, step=0.01, marks={}, updatemode='mouseup')], 
                             style={'display': 'inline-block', 'width':'60%', 'padding': '2'}),
             html.Div(id='output-data-upload'),
             html.Div([html.Label(dcc.Markdown('*__OR__ Select Built-in Sample Data:*')),
@@ -282,6 +283,20 @@ def regression_model(kernel_selected, cost_function, epsilon, json_intermediate_
         theilsen.fit(X, y)
         y_predicted = theilsen.predict(X)
         name = "Theilsen Reg., R-sq={:.2%}".format(theilsen.score(X,y))
+        
+        traces.append(go.Scatter(
+            x=X.ravel(),
+            y=y_predicted,
+            mode='lines', name=name))
+        
+    #>>>Huber Regression<<<
+    if 5 in model:
+        huber = linear_model.HuberRegressor()
+        huber.fit(X, y)
+        #inlier_mask_ransac = ransac.inlier_mask_
+        #outlier_mask_ransac = np.logical_not(inlier_mask_ransac)
+        y_predicted = huber.predict(X)
+        name = "Huber Reg., R-sq={:.2%}".format(huber.score(X,y))
         
         traces.append(go.Scatter(
             x=X.ravel(),
