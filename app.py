@@ -91,7 +91,7 @@ app.layout = html.Div(children=[
                                     {'label': 'Sigmoid', 'value': 'sigmoid'}
                                     ], placeholder="Select SVR Kernel", multi=True),
                          html.Div([
-                                 html.Label('Cost Function Coefficient:'),
+                                 html.Label('Penalty Ratio, C:'),
                                  dcc.Input(id='cost-function', type='number', step=0.01, placeholder='C=1.0'),
                                  html.Label('Epsilon for Support-Vector:'),
                                  dcc.Input(id='epsilon', type='number', step=0.01, placeholder='epsilon=0.5')]),
