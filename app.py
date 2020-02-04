@@ -206,7 +206,7 @@ def test_train_split(test_sample_size, test_train_split_on):
     if test_train_split_on==True:
         return row_trimmer_label, {'display': ''}, 'my-2 p-1 mx-0 col-6 border border-light shadow-sm'
     else:
-        return row_trimmer_label, {'display': 'none'}, 'my-2 mx-0 p-1 border border-light shadow-sm'
+        return row_trimmer_label, {'display': 'none'}, 'my-2 mx-0 p-1 col border border-light shadow-sm'
 
 
 #--------------------------------------------------------
