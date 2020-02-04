@@ -15,6 +15,7 @@ Regression Simulator:
 #Pandas, Numpy and Sklearn modules
 import pandas as pd
 import numpy as np
+import textwrap as  tw
 from sklearn.svm import SVR
 from sklearn import linear_model
 from sklearn.model_selection import train_test_split
@@ -24,6 +25,7 @@ import dash
 import dash_html_components as html
 import dash_core_components as dcc
 from dash.exceptions import PreventUpdate
+import dash_daq as daq
 import plotly.graph_objs as go
 
 #Custom modules
@@ -45,10 +47,10 @@ Use the simulator below to try different regression models on your data.
 '''
 subtext = '''
 Currently supports:
- - Ordinary Least Squares Regression or OLS Linear Regression
- - Support Vector Regression with Radial-Basis, Linear, Polynomial and Sigmoid Kernel Functions
- - Robust Linear Regression
- - Theilsen Regression
+- Ordinary Least Squares Regression or OLS Linear Regression
+- Support Vector Regression with Radial-Basis, Linear, Polynomial and Sigmoid Kernel Functions
+- Robust Linear Regression
+- Theilsen Regression
 '''
 
 footnote_markdown = '''
@@ -69,11 +71,12 @@ app.layout = html.Div(html.Div(children=[
 
         #---------
         #Chart
-        html.Div(dcc.Graph(id='plot-data'),
-                 style={'padding': '5'}, className='my-2 border border-light rounded-lg shadow-sm'),
-
-        #--------
-        # html.Hr(),
+        html.Div([
+                    html.Div(id='plot-train-data-div', children=dcc.Graph(id='plot-data'),
+                             style={'display': ''}, className='my-2 mx-1 p-0 col border border-light shadow-sm'),
+                    html.Div(id='plot-test-data-div', children=dcc.Graph(id='plot-test-data'),
+                             style={'display': 'none'}, className='my-2 p-1 col-6 border border-light shadow-sm')
+                 ], className='row'),
 
         #---------
         #Controls
@@ -135,10 +138,16 @@ app.layout = html.Div(html.Div(children=[
                                               className='p-4 text-center h6'),
                                     className='col-12 alert alert-dark rounded-lg shadow-sm'),
 
-                    html.Div([html.Label('Trim Training Data:', className='col-4'),
-                              dcc.Slider(id='row-trimmer', min=0.01, max=1, value=1, step=0.01, marks={}, updatemode='mouseup', className='col-8')],
-                            # style={'display': 'inline-block', 'width':'', 'padding': '0'},
-                            className='row m-0'),
+                    html.Div([
+                              html.Div([
+                                    html.Label(id='row-trimmer-label', children='Trim Training Data:', className='col-12'),
+                                    dcc.Slider(id='row-trimmer', min=0.01, max=1, value=1, step=0.01, marks={}, updatemode='mouseup', className='col-12 p-0')
+                                    ], className='col-7'),
+                              html.Div([
+                                    html.Label('Split Train/Test:', className='col-6 text-center p-0 m-0'),
+                                    daq.BooleanSwitch(id='train-test-split', on=False, className='col-6 p-0 m-0'),
+                                    ], className='col-5')
+                            ], className='row mb-2'),
 
                     html.Div(id='output-data-upload', className='col-12 m-0 p-0'),
 
@@ -173,13 +182,32 @@ app.layout = html.Div(html.Div(children=[
         #---------
         #Footnote
         html.Div(dcc.Markdown(footnote_markdown),
-                  style={'borderTop': 'thin lightgrey solid', 'padding': '10', 'fontSize': 'small'}, className='mt-4 pt-2'),
+                  style={'borderTop': 'thin lightgrey solid'}, className='mt-4 pt-2 text-muted'),
         ], className='container my-2'
 ), className='bg-light py-4')
 
 #========================================================
 # #APP INTERACTIONS BELOW
 #========================================================
+
+#Show Test Train Split
+@app.callback([dash.dependencies.Output('row-trimmer-label', 'children'),
+               dash.dependencies.Output('plot-test-data-div', 'style'),
+               dash.dependencies.Output('plot-train-data-div', 'className')],
+               [dash.dependencies.Input('row-trimmer', 'value'),
+                dash.dependencies.Input('train-test-split', 'on')])
+
+def test_train_split(test_sample_size, test_train_split_on):
+    if test_sample_size < 1:
+        row_trimmer_label = 'Training On: {:.1%}'.format(test_sample_size)
+    else:
+        raise PreventUpdate
+
+    if test_train_split_on==True:
+        return row_trimmer_label, {'display': ''}, 'my-2 p-1 mx-0 col-6 border border-light shadow-sm'
+    else:
+        return row_trimmer_label, {'display': 'none'}, 'my-2 mx-0 p-1 border border-light shadow-sm'
+
 
 #--------------------------------------------------------
 #Show SVR Inputs
@@ -211,7 +239,8 @@ def update_svrblock(value):
 #--------------------------------------------------------
 #Update graph based on filters
 @app.callback(
-    dash.dependencies.Output('plot-data', 'figure'),
+    [dash.dependencies.Output('plot-data', 'figure'),
+     dash.dependencies.Output('plot-test-data', 'figure')],
     [dash.dependencies.Input('kernel-selector', 'value'),
      dash.dependencies.Input('cost-function', 'value'),
      dash.dependencies.Input('epsilon', 'value'),
@@ -237,30 +266,30 @@ def regression_model(kernel_selected, cost_function, epsilon, json_intermediate_
             #Regressors, Datasets = sample_data()
             #df = Datasets[default_dataset]
             df = pd.read_json(json_intermediate_data, orient='split')[[x_column, y_column]]
-            df = df[:int(rows_selected*df.shape[0])].sort_values([x_column])
+            # df = df[:int(rows_selected*df.shape[0])].sort_values([x_column])
             # print(df)
             x_column = 'X'
             y_column = 'y'
         elif json_intermediate_data is not None:
             df = pd.read_json(json_intermediate_data, orient='split')[[x_column, y_column]]
-            df = df[:int(rows_selected*df.shape[0])].sort_values([x_column])
+            # df = df[:int(rows_selected*df.shape[0])].sort_values([x_column])
 
-        X = df.sort_values(x_column)[x_column].as_matrix().reshape(-1, 1)
-        y_df = df.sort_values(x_column)[y_column]
+        train_df, test_df = train_test_split(df, test_size=1-rows_selected)
+
+        #Test:Train Split functionality
+        #---
+        X = train_df.sort_values(x_column)[x_column].as_matrix().reshape(-1, 1)
+        y_df = train_df.sort_values(x_column)[y_column]
         y=y_df.as_matrix()
 
-        # train_df, test_df = train_test_split(df, test_size=0.3)
-
-        #Test:Train Split functionality not available yet
-        #---
-        #X = df_train[x_column].as_matrix().reshape(-1, 1)
-        #y = df_train[y_column].as_matrix()
-
-        #X_test = df_test[x_column].as_matrix().reshape(-1, 1)
-        #y_test= df_test[y_column].as_matrix()
-
+        # Prepare Test data ---
+        X_test = test_df.sort_values(x_column)[x_column].as_matrix().reshape(-1, 1)
+        y_df_test = test_df.sort_values(x_column)[y_column]
+        y_test=y_df_test.as_matrix()
 
         traces=[]
+        traces_test=[]
+
         #>>>Simple Linear Regression<<<
         if 1 in model:
             lr = linear_model.LinearRegression()
@@ -274,11 +303,19 @@ def regression_model(kernel_selected, cost_function, epsilon, json_intermediate_
                 y=lr.predict(X),
                 mode='lines', name=name))
 
+            if rows_selected < 1:
+                name_test = "OLS Reg., R-sq={:.2%}".format(lr.score(X_test,y_test))
+                traces_test.append(go.Scatter(
+                    x=X_test.ravel(),
+                    y=lr.predict(X_test),
+                    mode='lines', name=name_test))
+
         #>>>SVR<<<
         if 2 in model:
             for kernels in kernel_selected:
                 svr= SVR(kernel=kernels, C=float(cost_function), epsilon=float(epsilon))
-                y_predicted = svr.fit(X, y).predict(X)
+                svr_model = svr.fit(X, y)
+                y_predicted = svr_model.predict(X)
                 name = "Support-Vector Reg. " + kernels.upper() + ", R-sq: {:.2%}".format(svr.score(X,y))
 
                 if 1 in svr_tolerance:
@@ -292,6 +329,13 @@ def regression_model(kernel_selected, cost_function, epsilon, json_intermediate_
                     x=X.ravel(),
                     y=y_predicted,
                     mode='lines', name=name))
+
+                if rows_selected < 1:
+                    name_test = "Support-Vector Reg. " + kernels.upper() + ", R-sq: {:.2%}".format(svr.score(X_test,y_test))
+                    traces_test.append(go.Scatter(
+                        x=X_test.ravel(),
+                        y=svr_model.predict(X_test),
+                        mode='lines', name=name_test))
 
         #>>>Robust Linear<<<
         if 3 in model:
@@ -307,6 +351,14 @@ def regression_model(kernel_selected, cost_function, epsilon, json_intermediate_
                 y=y_predicted,
                 mode='lines', name=name))
 
+            if rows_selected < 1:
+                name_test = "RANSAC Reg., R-sq={:.2%}".format(ransac.score(X_test,y_test))
+                traces_test.append(go.Scatter(
+                    x=X_test.ravel(),
+                    y=ransac.predict(X_test),
+                    mode='lines', name=name_test))
+
+
         #>>>TheilSen Regression<<<
         if 4 in model:
             theilsen = linear_model.TheilSenRegressor()
@@ -319,12 +371,17 @@ def regression_model(kernel_selected, cost_function, epsilon, json_intermediate_
                 y=y_predicted,
                 mode='lines', name=name))
 
+            if rows_selected < 1:
+                name_test = "Theilsen Reg., R-sq={:.2%}".format(theilsen.score(X_test,y_test))
+                traces_test.append(go.Scatter(
+                    x=X_test.ravel(),
+                    y=theilsen.predict(X_test),
+                    mode='lines', name=name_test))
+
         #>>>Huber Regression<<<
         if 5 in model:
             huber = linear_model.HuberRegressor()
             huber.fit(X, y)
-            #inlier_mask_ransac = ransac.inlier_mask_
-            #outlier_mask_ransac = np.logical_not(inlier_mask_ransac)
             y_predicted = huber.predict(X)
             name = "Huber Reg., R-sq={:.2%}".format(huber.score(X,y))
 
@@ -333,22 +390,32 @@ def regression_model(kernel_selected, cost_function, epsilon, json_intermediate_
                 y=y_predicted,
                 mode='lines', name=name))
 
+            if rows_selected < 1:
+                name_test = "Huber Reg., R-sq={:.2%}".format(huber.score(X_test,y_test))
+                traces_test.append(go.Scatter(
+                    x=X_test.ravel(),
+                    y=huber.predict(X_test),
+                    mode='lines', name=name_test))
+
+
+
         #Add actual data points
         traces.append(go.Scatter(
                     x=X.ravel(),
                     y=y_df,
                     mode='markers', name='Training Data'))
 
-        #traces.append(go.Scatter(
-        #            x=X_test.ravel(),
-        #            y=y_test,
-        #            mode='markers', name='Testing Data'))
+        if rows_selected < 1:
+            traces_test.append(go.Scatter(
+                        x=X_test.ravel(),
+                        y=y_df_test,
+                        mode='markers', name='Test Data'))
 
         return {
             'data': traces,
             'layout': go.Layout(
-                title="Regression Modeling on Single Variable",
-                font=dict(family='sans-serif', size=12, color='#7f7f7f'),
+                title="Regression Modeling on Single Variable (Train: {:.1%})".format(rows_selected),
+                font=dict(family='sans-serif', size=10, color='#7f7f7f'),
                 xaxis={'title': x_column},
                 yaxis={'title': y_column},
                 hovermode='closest',
@@ -357,6 +424,21 @@ def regression_model(kernel_selected, cost_function, epsilon, json_intermediate_
                                 bgcolor='#E2E2E2', bordercolor='#FFFFFF', borderwidth=2
                                 )
             )
+        }, {
+        'data': traces_test,
+        'layout': go.Layout(
+            title="Regression Modeling on Single Variable (Test: {:.1%})".format(1-rows_selected),
+            font=dict(family='sans-serif', size=10, color='#7f7f7f'),
+            xaxis={'title': x_column},
+            yaxis={'title': y_column},
+            hovermode='closest',
+            height=450,
+            # width=500,
+            legend=dict(x=0, y=-0.5, traceorder='normal',
+                            font=dict(family='sans-serif', size=12, color='#000'),
+                            bgcolor='#E2E2E2', bordercolor='#FFFFFF', borderwidth=2
+                            )
+        )
         }
 
 #--------------------------------------------------------
