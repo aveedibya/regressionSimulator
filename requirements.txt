@@ -6,6 +6,7 @@ dash-core-components>=1.7.0
 dash-html-components>=1.0.2
 dash-renderer>=1.2.3
 dash-table>=4.6.0
+dash_daq
 decorator>=4.3.0
 Flask>=1.0.2
 Flask-Compress>=1.4.0
